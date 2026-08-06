@@ -28,7 +28,6 @@ limitations under the License.
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/span.h"
-#include "llvm/Support/ExtensibleRTTI.h"
 #include "nanobind/nanobind.h"
 #include "jaxlib/callback.h"
 #include "jaxlib/py_host_callback.pb.h"
@@ -37,6 +36,7 @@ limitations under the License.
 #include "xla/pjrt/host_callback.h"
 #include "xla/python/ifrt/client.h"
 #include "xla/python/ifrt/host_callback.h"
+#include "xla/python/ifrt/rtti.h"
 #include "xla/python/pjrt_ifrt/pjrt_host_callback.h"
 #include "xla/python/pjrt_ifrt/xla_host_callback.pb.h"
 #include "xla/python/types.h"
@@ -183,8 +183,8 @@ PyHostSendAndRecvLoadedHostCallback::PyHostSendAndRecvLoadedHostCallback(
     absl::Span<const xla::Shape> result_shapes,
     absl::Span<const uint16_t> send_channel_ids,
     absl::Span<const uint16_t> recv_channel_ids, nb::callable serializer)
-    : llvm::RTTIExtends<PyHostSendAndRecvLoadedHostCallback,
-                        ifrt::PjRtHostSendAndRecvLoadedHostCallback>(
+    : xla::ifrt::RTTIExtends<PyHostSendAndRecvLoadedHostCallback,
+                             ifrt::PjRtHostSendAndRecvLoadedHostCallback>(
           ifrt_client, std::move(xla_host_callback)),
       callable_(std::move(callable)),
       operand_shapes_(operand_shapes.begin(), operand_shapes.end()),

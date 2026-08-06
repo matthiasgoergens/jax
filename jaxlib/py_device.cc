@@ -29,7 +29,6 @@ limitations under the License.
 #include "absl/status/statusor.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
-#include "llvm/Support/Casting.h"
 #include "nanobind/nanobind.h"
 #include "nanobind/stl/optional.h"  // IWYU pragma: keep
 #include "nanobind/stl/string.h"  // IWYU pragma: keep
@@ -43,6 +42,7 @@ limitations under the License.
 #include "xla/pjrt/status_casters.h"
 #include "xla/python/ifrt/attribute_map.h"
 #include "xla/python/ifrt/device.h"
+#include "xla/python/ifrt/rtti.h"
 #include "xla/python/nb_helpers.h"
 #include "xla/python/pjrt_ifrt/pjrt_client.h"
 #include "xla/python/pjrt_ifrt/pjrt_device.h"
@@ -82,7 +82,7 @@ std::string_view PyDevice::device_kind() const { return device_->Kind(); }
 
 std::optional<int> PyDevice::local_hardware_id() const {
   // TODO(phawkins): consider supporting this for non-PJRT devices.
-  ifrt::PjRtDevice* device = llvm::dyn_cast<ifrt::PjRtDevice>(device_);
+  ifrt::PjRtDevice* device = xla::ifrt::dyn_cast<ifrt::PjRtDevice>(device_);
   if (device == nullptr || !device->IsAddressable()) {
     return std::nullopt;
   }
@@ -152,7 +152,7 @@ nb::typed<nb::list, PyMemorySpace> PyDevice::AddressableMemories() const {
 absl::StatusOr<std::optional<nb::typed<nb::dict, nb::str, int>>>
 PyDevice::MemoryStats() const {
   GlobalPyRefManager()->CollectGarbage();
-  ifrt::PjRtDevice* device = llvm::dyn_cast<ifrt::PjRtDevice>(device_);
+  ifrt::PjRtDevice* device = xla::ifrt::dyn_cast<ifrt::PjRtDevice>(device_);
   if (device == nullptr || !device->IsAddressable()) {
     return xla::InvalidArgument(
         "MemoryStats is only supported for addressable PjRt devices.");
@@ -190,7 +190,7 @@ PyDevice::MemoryStats() const {
 
 absl::StatusOr<std::intptr_t> PyDevice::GetStreamForExternalReadyEvents()
     const {
-  ifrt::PjRtDevice* device = llvm::dyn_cast<ifrt::PjRtDevice>(device_);
+  ifrt::PjRtDevice* device = xla::ifrt::dyn_cast<ifrt::PjRtDevice>(device_);
   if (device == nullptr || !device->IsAddressable()) {
     return xla::InvalidArgument(
         "GetStreamForExternalReadyEvents is only supported for addressable "
@@ -201,7 +201,7 @@ absl::StatusOr<std::intptr_t> PyDevice::GetStreamForExternalReadyEvents()
 
 absl::StatusOr<bool> PyDevice::PoisonExecution(
     int32_t launch_id, std::variant<std::string, nb::object> error) {
-  ifrt::PjRtDevice* device = llvm::dyn_cast<ifrt::PjRtDevice>(device_);
+  ifrt::PjRtDevice* device = xla::ifrt::dyn_cast<ifrt::PjRtDevice>(device_);
   if (device == nullptr || !device->IsAddressable()) {
     return xla::InvalidArgument(
         "poison_execution is only supported for addressable PjRt devices.");

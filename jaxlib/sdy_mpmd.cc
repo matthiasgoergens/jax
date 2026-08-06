@@ -27,7 +27,6 @@ limitations under the License.
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "llvm/Support/Casting.h"
 #include "mlir-c/IR.h"
 #include "mlir/Bindings/Python/IRCore.h"
 #include "mlir/CAPI/IR.h"  // IWYU pragma: keep; Needed to allow MlirModule -> ModuleOp.
@@ -65,6 +64,7 @@ limitations under the License.
 #include "xla/python/ifrt/ir/ifrt_ir_program.h"
 #include "xla/python/ifrt/ir/program_memory_tracer.h"
 #include "xla/python/ifrt/mpmd_executable.h"
+#include "xla/python/ifrt/rtti.h"
 #include "xla/python/ifrt/user_context.h"
 #include "xla/python/nb_absl_flat_hash_map.h"  // IWYU pragma: keep
 #include "xla/python/pjrt_ifrt/xla_compiler.h"
@@ -218,7 +218,8 @@ absl::StatusOr<std::unique_ptr<PyMpmdLoadedExecutable>> CompileMpmd(
                              std::move(ifrt_compile_options))
             .Await());
   }
-  if (!llvm::isa<xla::ifrt::MpmdLoadedExecutable>(loaded_executable.get())) {
+  if (!xla::ifrt::isa<xla::ifrt::MpmdLoadedExecutable>(
+          loaded_executable.get())) {
     return absl::InternalError(
         "Loaded executable must be an `xla::ifrt::MpmdLoadedExecutable`.");
   };

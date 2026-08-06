@@ -21,7 +21,6 @@ limitations under the License.
 
 #include "absl/log/check.h"
 #include "absl/status/statusor.h"
-#include "llvm/Support/Casting.h"
 #include "mlir-c/IR.h"
 #include "mlir/Bindings/Python/IRCore.h"
 #include "mlir/CAPI/IR.h"
@@ -42,6 +41,7 @@ limitations under the License.
 #include "xla/python/ifrt/device_list.h"
 #include "xla/python/ifrt/executable.h"
 #include "xla/python/ifrt/hlo/hlo_program.h"
+#include "xla/python/ifrt/rtti.h"
 #include "xla/python/pjrt_ifrt/pjrt_executable.h"
 #include "xla/python/pjrt_ifrt/pjrt_topology.h"
 #include "xla/python/pjrt_ifrt/xla_compiler.h"
@@ -75,8 +75,8 @@ absl::StatusOr<nb_class_ptr<PyExecutable>> CompileOnlyPyClient::CompileUnloaded(
   ifrt::ExecutableRef ifrt_executable;
   {
     nb::gil_scoped_release gil_release;
-    auto* ifrt_client =
-        llvm::dyn_cast_or_null<xla::CompileOnlyIfRtClient>(this->ifrt_client());
+    auto* ifrt_client = xla::ifrt::dyn_cast_or_null<xla::CompileOnlyIfRtClient>(
+        this->ifrt_client());
     CHECK(ifrt_client) << "CompileOnlyPyClient requires ifrt_client be a "
                           "xla::CompileOnlyIfRtClient";
 

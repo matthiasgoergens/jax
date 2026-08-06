@@ -36,7 +36,6 @@ limitations under the License.
 #include "absl/strings/str_cat.h"
 #include "absl/time/time.h"
 #include "absl/types/span.h"
-#include "llvm/Support/Casting.h"
 #include "nanobind/nanobind.h"
 #include "nanobind/nb_defs.h"
 #include "nanobind/stl/function.h"  // IWYU pragma: keep
@@ -71,6 +70,7 @@ limitations under the License.
 #include "xla/python/ifrt/device.h"
 #include "xla/python/ifrt/device_list.h"
 #include "xla/python/ifrt/executable.h"
+#include "xla/python/ifrt/rtti.h"
 #include "xla/python/ifrt/topology.h"
 #include "xla/python/pjrt_ifrt/pjrt_attribute_map_util.h"
 #include "xla/python/pjrt_ifrt/transfer_server_interface.h"
@@ -990,7 +990,7 @@ NB_MODULE(_jax, m) {
   nb::class_<xla::ifrt::Topology>(m, "DeviceTopology")
       .def("_make_compile_only_devices",
            [](std::shared_ptr<xla::ifrt::Topology> topology) {
-             if (!llvm::isa<xla::ifrt::PjRtTopology>(*topology)) {
+             if (!xla::ifrt::isa<xla::ifrt::PjRtTopology>(*topology)) {
                throw xla::XlaRuntimeError("Only PjRtTopologies are supported.");
              }
              return CompileOnlyPyClient::Make(

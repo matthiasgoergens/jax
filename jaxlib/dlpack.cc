@@ -33,7 +33,6 @@ limitations under the License.
 #include "absl/strings/str_join.h"
 #include "absl/types/span.h"
 #include "include/dlpack/dlpack.h"
-#include "llvm/Support/Casting.h"
 #include "nanobind/nanobind.h"
 #include "nanobind/ndarray.h"
 #include "jaxlib/nb_class_ptr.h"
@@ -51,6 +50,7 @@ limitations under the License.
 #include "xla/python/dlpack_types.h"
 #include "xla/python/ifrt/array.h"
 #include "xla/python/ifrt/device.h"
+#include "xla/python/ifrt/rtti.h"
 #include "xla/python/pjrt_ifrt/pjrt_array.h"
 #include "xla/python/pjrt_ifrt/pjrt_client.h"
 #include "xla/python/pjrt_ifrt/pjrt_device.h"
@@ -277,7 +277,8 @@ absl::StatusOr<nb::capsule> BufferToDLPackManagedTensor(
     return xla::Unimplemented(
         "BufferToDLPackManagedTensor called on deleted array.");
   }
-  auto* arr = llvm::dyn_cast_or_null<ifrt::PjRtCompatibleArray>(ifrt_array);
+  auto* arr =
+      xla::ifrt::dyn_cast_or_null<ifrt::PjRtCompatibleArray>(ifrt_array);
   if (arr == nullptr) {
     throw xla::XlaRuntimeError(
         "This operation is implemented for a PjRt-compatible backend only.");
@@ -358,7 +359,7 @@ absl::StatusOr<nb::object> DLPackManagedTensorToBuffer(
     nb_class_ptr<PyClient> client, std::optional<std::intptr_t> stream,
     std::optional<bool> copy, std::optional<DLDeviceType> dl_device_type) {
   ifrt::PjRtDevice* device =
-      llvm::dyn_cast_or_null<ifrt::PjRtDevice>(ifrt_device);
+      xla::ifrt::dyn_cast_or_null<ifrt::PjRtDevice>(ifrt_device);
   if (device == nullptr) {
     throw xla::XlaRuntimeError(
         "DLPack is supported for PjRt-compatible backends only.");
@@ -414,8 +415,8 @@ absl::StatusOr<nb::object> DLPackManagedTensorToBuffer(
   PyCapsule_SetName(tensor.ptr(), "used_dltensor");
   PyCapsule_SetDestructor(tensor.ptr(), nullptr);
 
-  auto* ifrt_client =
-      llvm::dyn_cast_or_null<ifrt::PjRtCompatibleClient>(client->ifrt_client());
+  auto* ifrt_client = xla::ifrt::dyn_cast_or_null<ifrt::PjRtCompatibleClient>(
+      client->ifrt_client());
   if (ifrt_client == nullptr) {
     throw xla::XlaRuntimeError(
         "This operation is implemented for a PjRt-compatible backend only.");

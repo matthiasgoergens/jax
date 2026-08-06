@@ -31,7 +31,6 @@ limitations under the License.
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
 #include "absl/time/time.h"
-#include "llvm/Support/Casting.h"
 #include "nanobind/nanobind.h"
 #include "nanobind/stl/array.h"  // IWYU pragma: keep
 #include "nanobind/stl/shared_ptr.h"  // IWYU pragma: keep
@@ -53,6 +52,7 @@ limitations under the License.
 #include "xla/python/ifrt/array_spec.h"
 #include "xla/python/ifrt/dtype.h"
 #include "xla/python/ifrt/memory.h"
+#include "xla/python/ifrt/rtti.h"
 #include "xla/python/ifrt/shape.h"
 #include "xla/python/ifrt/sharding.h"
 #include "xla/python/nb_numpy.h"
@@ -126,7 +126,8 @@ absl::StatusOr<tsl::RCReference<PullTable::Entry>> CreatePullEntry(
   if (use_raw_buffers) {
     std::vector<RawBufferEntry::BufferRef> refs;
     for (auto& arr : arrs) {
-      auto* pjrt_arr = llvm::dyn_cast_or_null<xla::ifrt::PjRtArray>(arr.get());
+      auto* pjrt_arr =
+          xla::ifrt::dyn_cast_or_null<xla::ifrt::PjRtArray>(arr.get());
       if (pjrt_arr == nullptr) {
         return absl::InvalidArgumentError(
             "Cannot remote transfer non-pjrt arrays.");
@@ -146,7 +147,8 @@ absl::StatusOr<tsl::RCReference<PullTable::Entry>> CreatePullEntry(
 
   std::vector<PjRtBufferEntry::BufferRef> refs;
   for (auto& arr : arrs) {
-    auto* pjrt_arr = llvm::dyn_cast_or_null<xla::ifrt::PjRtArray>(arr.get());
+    auto* pjrt_arr =
+        xla::ifrt::dyn_cast_or_null<xla::ifrt::PjRtArray>(arr.get());
     if (pjrt_arr == nullptr) {
       return absl::InvalidArgumentError(
           "Cannot remote transfer non-pjrt arrays.");
@@ -303,8 +305,9 @@ void RegisterTransferServerTypes(nanobind::module_& m) {
           [](PyTransferServerConnection& self, nb::int_ uuid,
              jax::nb_class_ptr<jax::PyClient> py_client,
              std::vector<nb::object> py_avals, nb::object timeout_obj) {
-            auto* ifrt_client = llvm::dyn_cast_or_null<xla::ifrt::PjRtClient>(
-                py_client->ifrt_client());
+            auto* ifrt_client =
+                xla::ifrt::dyn_cast_or_null<xla::ifrt::PjRtClient>(
+                    py_client->ifrt_client());
             if (ifrt_client == nullptr) {
               xla::ThrowIfError(absl::InvalidArgumentError(
                   "_pull_flat only supported on pjrt-ifrt clients."));
@@ -504,8 +507,8 @@ void RegisterTransferServerTypes(nanobind::module_& m) {
       });
   m.def("_make_error_array", [](jax::nb_class_ptr<jax::PyClient> py_client,
                                 nb::object py_aval, std::string message) {
-    auto* ifrt_client =
-        llvm::dyn_cast_or_null<xla::ifrt::PjRtClient>(py_client->ifrt_client());
+    auto* ifrt_client = xla::ifrt::dyn_cast_or_null<xla::ifrt::PjRtClient>(
+        py_client->ifrt_client());
     if (ifrt_client == nullptr) {
       xla::ThrowIfError(absl::InvalidArgumentError(
           "_pull_flat only supported on pjrt-ifrt clients."));

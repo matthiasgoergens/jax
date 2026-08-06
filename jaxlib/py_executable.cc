@@ -63,6 +63,7 @@ limitations under the License.
 #include "xla/python/ifrt/device.h"
 #include "xla/python/ifrt/device_list.h"
 #include "xla/python/ifrt/executable.h"
+#include "xla/python/ifrt/rtti.h"
 #include "xla/python/ifrt/sharding.h"
 #include "xla/python/ifrt/user_context.h"
 #include "xla/python/ifrt/user_context_status_util.h"
@@ -615,7 +616,7 @@ void PyLoadedExecutable::Register(nb::module_& m) {
       .def_prop_ro(
           "unsafe_executable_pointer",
           [](PyLoadedExecutable& self) -> std::uintptr_t {
-            if (auto* pjrt_comp = llvm::dyn_cast_or_null<
+            if (auto* pjrt_comp = xla::ifrt::dyn_cast_or_null<
                     ifrt::PjRtCompatibleLoadedExecutable>(
                     self.ifrt_loaded_executable())) {
               if (auto* pjrt_exec = pjrt_comp->pjrt_loaded_executable()) {
