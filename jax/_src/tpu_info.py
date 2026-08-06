@@ -14,18 +14,18 @@
 
 """Exposes TPU hardware information."""
 
+from collections.abc import Callable
 import dataclasses
 import enum
 from typing import cast
-from collections.abc import Callable
 
 from jax._src import core as jax_core
 from jax._src import dtypes
 from jax._src import mesh as mesh_lib
 from jax._src import util as jax_util
 from jax._src.interpreters import pxla
-
 import numpy as np
+
 
 class ChipVersionBase:
   pass
@@ -240,24 +240,48 @@ class TpuInfo:
         return lhs_dtype == rhs_dtype == F32
       case ChipVersion.TPU_V4I | ChipVersion.TPU_V4:
         return lhs_dtype in (F32, BF16) and rhs_dtype in (F32, BF16, S8)
-      case ChipVersion.TPU_V5E | ChipVersion.TPU_V6E | ChipVersion.TPU_V5P:
+      case ChipVersion.TPU_V5E | ChipVersion.TPU_V5P | ChipVersion.TPU_V6E:
         return (
+            # bf16 input precision
             (
                 lhs_dtype in (F32, BF16, F8E5M2, F8E4M3B11FNUZ)
                 and rhs_dtype in (F32, BF16, F8E5M2, F8E4M3B11FNUZ)
             )
+            # int8 input precision
             or (lhs_dtype in (U8, S8) and rhs_dtype in (U8, S8))
+            # int4 input precision
             or (lhs_dtype in (U4, S4) and rhs_dtype in (U4, S4))
         )
-      case (
-          ChipVersion.TPU_7 |
-          ChipVersion.TPU_7X |
-          ChipVersion.TPU_8I):
-        return (lhs_dtype in (F32, BF16) and rhs_dtype in (F32, BF16)) or (
-            lhs_dtype in (F32, BF16, F8E5M2, F8E4M3FN)
-            and rhs_dtype in (F8E5M2, F8E4M3FN)
+      case ChipVersion.TPU_7 | ChipVersion.TPU_7X:
+        return (
+            # bf16 input precision
+            (
+                lhs_dtype in (F32, BF16)
+                and rhs_dtype in (F32, BF16, F8E5M2, F8E4M3FN)
+            )
+            or
+            # fp8 input precision
+            (
+                lhs_dtype in (F8E5M2, F8E4M3FN)
+                and rhs_dtype in (F8E5M2, F8E4M3FN)
+            )
         )
-      case ChipVersion.TPU_8T:  # TODO(yinzhong): update the supported dtypes for TPU8T
+      case ChipVersion.TPU_8I:
+        return (
+            # bf16 input precision
+            (
+                lhs_dtype in (F32, BF16)
+                and rhs_dtype in (F32, BF16, F8E5M2, F8E4M3FN, U4, S4)
+            )
+            or
+            # fp8 input precision
+            (
+                lhs_dtype in (F8E5M2, F8E4M3FN)
+                and rhs_dtype in (F8E5M2, F8E4M3FN, U4, S4)
+            )
+        )
+      case ChipVersion.TPU_8T:
+        # incomplete
         return (lhs_dtype in (F32, BF16) and rhs_dtype in (F32, BF16)) or (
             lhs_dtype in (F32, BF16, F8E5M2, F8E4M3FN)
             and rhs_dtype in (F8E5M2, F8E4M3FN)
